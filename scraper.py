@@ -4,9 +4,7 @@ import requests
 import io
 from bs4 import BeautifulSoup
 import sys
-import string
 import re
-from itertools import chain
 import geocoder
 import json
 
