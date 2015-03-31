@@ -59,7 +59,6 @@ if __name__ == '__main__':
     data_list = data['features']
     get_key = key_factory(sort_field)
     sorted_list = sorted(data_list, key=get_key, **kargs)
-    #  pprint.pprint(sorted_list)
 
     # use only specified number of items
     if args.amount is not None:
