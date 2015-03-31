@@ -4,10 +4,9 @@ import requests
 import io
 from bs4 import BeautifulSoup
 import sys
-import string
 import re
-from itertools import chain
-
+import geocoder
+import json
 
 
 INSPECTION_DOMAIN = 'http://info.kingcounty.gov'
@@ -42,7 +41,7 @@ def get_inspection_page(**kwargs):
         if key in INSPECTION_PARAMS:
             params[key] = val
     resp = requests.get(url, params=params)
-    resp.raise_for_status() # <- This is a no-op if there is no HTTP error
+    resp.raise_for_status()  # <- This is a no-op if there is no HTTP error
     # remember, in requests `content` is bytes and `text` is unicode
     return resp.content, resp.encoding
 
@@ -146,23 +145,64 @@ def extract_score_data(elem):
     return data
 
 
-if __name__ == '__main__':
+def generate_results(test=False, count=10):
     kwargs = {
         'Inspection_Start': '2/1/2013',
         'Inspection_End': '2/1/2015',
         'Zip_Code': '98109'
     }
-    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    if test:
         html, encoding = load_inspection_page('inspection_page.html')
     else:
         html, encoding = get_inspection_page(**kwargs)
     doc = parse_source(html, encoding)
     listings = extract_data_listings(doc)
-
-    restaurant_data = []
-    for listing in listings[:5]:
+    for listing in listings[:count]:
         metadata = extract_restaurant_metadata(listing)
         score_data = extract_score_data(listing)
         metadata.update(score_data)
-        restaurant_data.append(metadata)
-    print restaurant_data
+        yield metadata
+
+
+def get_geojson(result):
+    address = " ".join(result.get('Address', ''))
+    if not address:
+        return None
+    geocoded = geocoder.google(address)
+    return geocoded.geojson
+
+
+def get_geojson(result):
+    address = " ".join(result.get('Address', ''))
+    if not address:
+        return None
+    geocoded = geocoder.google(address)
+    geojson = geocoded.geojson
+    inspection_data = {}
+    use_keys = (
+        'Business Name', 'Average Score', 'Total Inspections', 'High Score',
+        'Address',
+    )
+    for key, val in result.items():
+        if key not in use_keys:
+            continue
+        if isinstance(val, list):
+            val = " ".join(val)
+        inspection_data[key] = val
+    new_address = geojson['properties'].get('address')
+    if new_address:
+        inspection_data['Address'] = new_address
+    geojson['properties'] = inspection_data
+    return geojson
+
+
+if __name__ == '__main__':
+    import pprint
+    test = len(sys.argv) > 1 and sys.argv[1] == 'test'
+    total_result = {'type': 'FeatureCollection', 'features': []}
+    for result in generate_results(test):
+        geo_result = get_geojson(result)
+        pprint.pprint(geo_result)
+        total_result['features'].append(geo_result)
+    with open('my_map.json', 'w') as fh:
+        json.dump(total_result, fh)
