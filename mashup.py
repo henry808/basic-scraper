@@ -13,16 +13,31 @@ if __name__ == '__main__':
     parser.add_argument('direction', help="if reverse sort, specify reverse.")
     args = parser.parse_args()
 
-    if args.direction == 'reverse':
+    if args.direction == ' reverse':
         direction = 'by reverse'
     else:
         direction = ''
 
+    legal_args = ['address',
+                  'averagescore',
+                  'businessname',
+                  'highscore',
+                  'totalinspections']
 
-    message = 'Sort {} items by: {} field {}.'.format(args.amount,
-                                                      args.sort,
-                                                      direction)
+    legal_fields = ['Address',
+                    'Average Score',
+                    'Business Name',
+                    'High Score',
+                    'Total Inspections']
 
+    if args.sort not in legal_args:
+        print 'Not a sortable field. Could not sort.'
+        sys.exit()
+    else:
+        sort_field = legal_fields[legal_args.index(args.sort)]
+    message = 'Sorting {} items by: {} field{}.'.format(args.amount,
+                                                    sort_field,
+                                                    direction)
     print(message)
 
     # try:
