@@ -41,7 +41,7 @@ def get_inspection_page(**kwargs):
         if key in INSPECTION_PARAMS:
             params[key] = val
     resp = requests.get(url, params=params)
-    resp.raise_for_status() # <- This is a no-op if there is no HTTP error
+    resp.raise_for_status()  # <- This is a no-op if there is no HTTP error
     # remember, in requests `content` is bytes and `text` is unicode
     return resp.content, resp.encoding
 
