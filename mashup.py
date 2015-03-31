@@ -17,11 +17,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('sort', help="specify sort field. Legal fields: address, averagescore, businessname, highscore, totalinspections")
     parser.add_argument('amount', nargs='?', type=int, help="specify number of items.")
-    parser.add_argument('direction', nargs='?', help="if reverse sort, specify reverse.")
+    parser.add_argument('direction', nargs='?', help="to reverse sort, specify reverse (must have an amount for reverse to work).")
     args = parser.parse_args()
 
     if args.direction == 'reverse':
-        direction = 'by reverse'
+        direction = ' by reverse'
         kargs = {'reverse': True}
     else:
         direction = ''
@@ -48,11 +48,6 @@ if __name__ == '__main__':
         amount = args.amount
     else:
         amount = 'all'
-    message = 'Sorting {} items by {} field{}.'.format(amount,
-                                                       sort_field,
-                                                       direction)
-    print(message)
-    print(str(args.sort) + " " + str(args.amount) + " " + str(args.direction))
 
     with open('my_map.json', 'r') as data_file:
         data = json.load(data_file)
@@ -73,4 +68,9 @@ if __name__ == '__main__':
     file_name = 'end_map.json'
     with open(file_name, 'w') as data_file:
         data = json.dump(sorted_result, data_file)
-    print("Wrote json object file to: {}".format(file_name))
+
+    message = '\nSorted {} items by {} field{}.'.format(amount,
+                                                        sort_field,
+                                                        direction)
+    print(message)
+    print("\nWrote json object file to: {}".format(file_name))
